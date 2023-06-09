@@ -4,8 +4,11 @@ var ctx = canvas.getContext("2d");
 
 var img = document.getElementById("scream");
 
-const WIDTH = 700;
-const HEIGHT = 525;
+// const WIDTH = 700;
+// const HEIGHT = 525;
+const WIDTH = 500;
+const HEIGHT = 500;
+
 
 ctx.drawImage(img, 0, 0, WIDTH, HEIGHT);
 
