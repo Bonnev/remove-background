@@ -155,6 +155,16 @@ for (let row = 0; row < matrixG.length; row++) {
   }
 }
 
+/*for (let row = 0; row < matrixG.length; row++) {
+  for (let column = 0; column < matrixG[row].length; column++) {
+    
+    const index = row * (WIDTH * 4) + (column * 4);
+    data[index] = matrixG[row][column];
+    data[index+1] = matrixG[row][column];
+    data[index+2] = matrixG[row][column];
+  }
+}*/
+
 for (let row = 0; row < matrixG.length; row++) {
   for (let column = 0; column < matrixG[row].length; column++) {
 
@@ -167,7 +177,6 @@ for (let row = 0; row < matrixG.length; row++) {
   data[index+2] = rgb[2] * 255;
   }
 }
-
 
 ctx.putImageData(imageData, 0, 0);
 
