@@ -134,39 +134,46 @@ let matrixGradient = matrix.map(a=>[...a]);
 for (let row = 0; row < matrixGy.length; row++) {
   for (let column = 0; column < matrixGy[row].length; column++) {
     matrixG[row][column] = Math.sqrt(matrixGx[row][column] * matrixGx[row][column] + matrixGy[row][column+1] * matrixGy[row][column]);
+    logLimited(matrixGx[row][column], matrixGy[row][column] / matrixGx[row][column]);
     matrixGradient[row][column] = Math.atan(matrixGy[row][column] / matrixGx[row][column]) * 720 / Math.PI;
   }
 }
 
 // normalize
-let maxSum = 0;
-let minSum = 0;
-for (let row = 0; row < matrixG.length; row++) {
-  for (let column = 0; column < matrixG[row].length; column++) {
-    if (matrixG[row][column] > maxSum) {
-      maxSum = matrixG[row][column];
-    }
-    if (matrixG[row][column] < minSum) {
-      minSum = matrixG[row][column];
+const normalize = (matrix) => {
+  let maxSum = 0;
+  let minSum = 0;
+  for (let row = 0; row < matrix.length; row++) {
+    for (let column = 0; column < matrix[row].length; column++) {
+      if (matrix[row][column] > maxSum) {
+        maxSum = matrix[row][column];
+      }
+      if (matrix[row][column] < minSum) {
+        minSum = matrix[row][column];
+      }
     }
   }
-}
-for (let row = 0; row < matrixG.length; row++) {
-  for (let column = 0; column < matrixG[row].length; column++) {
-    //matrixG[row][column] = (matrixG[row][column] + maxSum) * (255 / (2 * maxSum));
-    matrixG[row][column] = (matrixG[row][column] - minSum) / (maxSum - minSum) * 255;
+  for (let row = 0; row < matrix.length; row++) {
+    for (let column = 0; column < matrix[row].length; column++) {
+      //matrix[row][column] = (matrix[row][column] + maxSum) * (255 / (2 * maxSum));
+      matrix[row][column] = (matrix[row][column] - minSum) / (maxSum - minSum) * 255;
+    }
   }
-}
+};
+normalize(matrixG);
 
-/*for (let row = 0; row < matrixG.length; row++) {
-  for (let column = 0; column < matrixG[row].length; column++) {
-    
-    const index = row * (WIDTH * 4) + (column * 4);
-    data[index] = matrixG[row][column];
-    data[index+1] = matrixG[row][column];
-    data[index+2] = matrixG[row][column];
-  }
-}*/
+// const putInData = (matrix) => {
+//   for (let row = 0; row < matrix.length; row++) {
+//     for (let column = 0; column < matrix[row].length; column++) {
+      
+//       const index = row * (WIDTH * 4) + (column * 4);
+//       data[index] = matrix[row][column];
+//       data[index+1] = matrix[row][column];
+//       data[index+2] = matrix[row][column];
+//     }
+//   }
+// };
+// putInData(matrixG);
 
 for (let row = 0; row < matrixG.length; row++) {
   for (let column = 0; column < matrixG[row].length; column++) {
@@ -188,4 +195,16 @@ function hsl2rgb(h,s,l)  {
    let a=s*Math.min(l,1-l);
    let f= (n,k=(n+h/30)%12) => l - a*Math.max(Math.min(k-3,9-k,1),-1);
    return [f(0),f(8),f(4)];
+}
+
+var logIndex = 0;
+function logLimited(...rest) {
+  if (!logIndex) {
+    logIndex = 1;
+  }
+
+  if (logIndex < 1000) {
+    console.log(...rest);
+    logIndex++;
+  }
 }
