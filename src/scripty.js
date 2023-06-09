@@ -36,57 +36,59 @@ var data = imageData.data;
 //   [0, 0, 0],
 //   [1, 2, 1]
 // ];
-const kernels = [
-  [
-    [1, 1, 1],
-    [1, 1, 1],
-    [1, 1, 1]
-  ],
-  // [
-  //   [1, 1, 1],
-  //   [1, 1, 1],
-  //   [1, 1, 1]
-  // ],
-  [
-    [-2, 0, 2],
-    [-4, 0, 4],
-    [-2, 0, 2]
-  ]
+const kernelBlur = [
+  [1, 1, 1],
+  [1, 1, 1],
+  [1, 1, 1]
 ];
-//const kernelSums = kernels.map(k => k.reduce((acc, curr) => acc + curr.reduce((a,c)=>a+c, 0), 0));
-const kernelSums = [9, 1, 1];
+const kernelGx = [
+  [-2, 0, 2],
+  [-4, 0, 4],
+  [-2, 0, 2]
+];
+const kernelGy = [
+  [-2, -4, -2],
+  [0, 0, 0],
+  [2, 4, 2]
+];
+const findSum = (mat) => mat.reduce((acc, curr) => acc + curr.reduce((a,c)=>a+c, 0), 0);
+const kernelSums = [9, 1];
 
 const matrix = [[]];
 for (let i=0; i < data.length-2; i+=4) {
   const row = parseInt(i / (WIDTH * 4));
   const column = (i % (WIDTH * 4)) / 4;
   
-  if (row === 1) {
-    console.log(matrix.length);
-  }
-  
   if (matrix.length <= row) {
     matrix.push([[]]);
   }
-  if (row ===2) {
-    console.log(column);
-    console.log(matrix);
-  }
+  
   var sum = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2];
   matrix[row][column] = sum;
 }
 
-let matrixFrom = matrix.map(a=>[...a]);
-let matrixTo = matrix.map(a=>[...a]);
+let matrixBlur = matrix.map(a=>[...a]);
+let matrixGx = matrix.map(a=>[...a]);
+let matrixGy = matrix.map(a=>[...a]);
 
-for (let kernelIndex = 0; kernelIndex < kernels.length; kernelIndex++) {
-  const kernel = kernels[kernelIndex];
+const operations = [
+  { from: matrix, to: matrixBlur, kernel: kernelBlur, sum: findSum(matrix) },
+  { from: matrixBlur, to: matrixGx, kernel: kernelGx, sum: findSum(matrix) },
+  { from: matrixBlur, to: matrixGy, kernel: kernelGy, sum: findSum(matrix) },
+];
+
+
+for (let operationIndex = 0; operationIndex < operations.length; operationIndex++) {
+  const operation = operations[operationIndex];
+  const matrixFrom = operation.from;
+  const matrixTo = operation.to;
+  const sumDiv = operation.sum;
+  const kernel = operation.kernel;
 
   for (let row = 0; row < matrixFrom.length; row++) {
     for (let column = 0; column < matrixFrom[row].length; column++) {
     
       let sum = 0;
-
 
       if(column - 1 >= 0 && row - 1 >= 0) {
         sum += kernel[0][0] * matrixFrom[row-1][column-1];
@@ -116,50 +118,62 @@ for (let kernelIndex = 0; kernelIndex < kernels.length; kernelIndex++) {
         sum += kernel[2][2] * matrixFrom[row+1][column+1];
       }
 
-      matrixTo[row][column] = sum / kernelSums[kernelIndex];
+      matrixTo[row][column] = sum / sumDiv;
     }
   }
-  matrixFrom = matrixTo.map(a=>[...a]);
+  //matrixFrom = matrixTo.map(a=>[...a]);
+}
+
+let matrixG = matrix.map(a=>[...a]);
+let matrixGradient = matrix.map(a=>[...a]);
+
+// find G
+for (let row = 0; row < matrixGy.length; row++) {
+  for (let column = 0; column < matrixGy[row].length; column++) {
+    matrixG[row][column] = Math.sqrt(matrixGx[row][column] * matrixGx[row][column] + matrixGy[row][column+1] * matrixGy[row][column]);
+    matrixGradient[row][column] = Math.atan(matrixGy[row][column] / matrixGx[row][column]) * 720 / Math.PI;
+  }
 }
 
 // normalize
 let maxSum = 0;
-for (let row = 0; row < matrixTo.length; row++) {
-  for (let column = 0; column < matrixTo[row].length; column++) {
-    if (matrixTo[row][column] > maxSum) {
-      maxSum = matrixTo[row][column];
+let minSum = 0;
+for (let row = 0; row < matrixG.length; row++) {
+  for (let column = 0; column < matrixG[row].length; column++) {
+    if (matrixG[row][column] > maxSum) {
+      maxSum = matrixG[row][column];
+    }
+    if (matrixG[row][column] < minSum) {
+      minSum = matrixG[row][column];
     }
   }
 }
-for (let row = 0; row < matrixTo.length; row++) {
-  for (let column = 0; column < matrixTo[row].length; column++) {
-    matrixTo[row][column] = (matrixTo[row][column] + maxSum) * (255 / (2 * maxSum));
+for (let row = 0; row < matrixG.length; row++) {
+  for (let column = 0; column < matrixG[row].length; column++) {
+    //matrixG[row][column] = (matrixG[row][column] + maxSum) * (255 / (2 * maxSum));
+    matrixG[row][column] = (matrixG[row][column] - minSum) / (maxSum - minSum) * 255;
   }
 }
 
+for (let row = 0; row < matrixG.length; row++) {
+  for (let column = 0; column < matrixG[row].length; column++) {
 
-//debugger;
+  const lightning = matrixG[row][column] / 255;
+  const rgb = hsl2rgb(matrixGradient[row][column], 0.5, lightning);
 
-//console.log('row', row, 'column', column);
-//var sum = 0.299 * data[i] + 0.587 * data[i+1] + 0.114 * data[i+2]
-  /* var sum = 0.33 * data[i] + 0.33 * data[i+1] + 0.33 * data[i+2] */
-  /* data[i] = sum;
-  data[i+1] = sum;
-  data[i+2] = sum; */
-  /*if  (sum < 40) {
-    data[i+3] = 0;
-  } */
-
-for (let row = 0; row < matrixTo.length; row++) {
-  for (let column = 0; column < matrixTo[row].length; column++) {
-    
-    const index = row * (WIDTH * 4) + (column * 4);
-    data[index] = matrixTo[row][column];
-    data[index+1] = matrixTo[row][column];
-    data[index+2] = matrixTo[row][column];
+  const index = row * (WIDTH * 4) + (column * 4);
+  data[index] = rgb[0] * 255;
+  data[index+1] = rgb[1] * 255;
+  data[index+2] = rgb[2] * 255;
   }
 }
 
 
 ctx.putImageData(imageData, 0, 0);
 
+// input: h as an angle in [0,360] and s,l in [0,1] - output: r,g,b in [0,1]
+function hsl2rgb(h,s,l)  {
+   let a=s*Math.min(l,1-l);
+   let f= (n,k=(n+h/30)%12) => l - a*Math.max(Math.min(k-3,9-k,1),-1);
+   return [f(0),f(8),f(4)];
+}
