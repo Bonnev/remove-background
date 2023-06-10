@@ -133,18 +133,31 @@ let matrixGradient = matrix.map(a=>[...a]);
 // find G
 for (let row = 0; row < matrixGy.length; row++) {
   for (let column = 0; column < matrixGy[row].length; column++) {
-    matrixG[row][column] = Math.sqrt(matrixGx[row][column] * matrixGx[row][column] + matrixGy[row][column+1] * matrixGy[row][column]);
+    matrixG[row][column] = Math.sqrt(matrixGx[row][column] * matrixGx[row][column] + matrixGy[row][column] * matrixGy[row][column]);
     
     let Gx = matrixGx[row][column];
     if (Gx === 0) Gx = 0.0001;
     let atan = Math.atan(matrixGy[row][column] / Gx) + Math.PI/2;
     if (atan < 0) atan = 0;
-    if (atan > Math.PI / 2) atan = Math.PI / 2;
+    //if (atan > Math.PI / 2) atan = Math.PI / 2;
+    //logLimited(atan, );
     
-    matrixGradient[row][column] = (atan) * 720 / Math.PI;
-    if (matrixGradient[row][column] < 350)
-    logLimited(atan, matrixGradient[row][column]);
+    matrixGradient[row][column] = (atan) * 360 / Math.PI;
   }
+}
+
+for (let column = 0; column < matrixG[0].length; column++) {
+  matrixG[0][column] = 0;
+  matrixG[1][column] = 0;
+  matrixG[matrixG.length-2][column] = 0;
+  matrixG[matrixG.length-1][column] = 0;
+}
+
+for (let row = 0; row < matrixG.length; row++) {
+  matrixG[row][0] = 0;
+  matrixG[row][1] = 0;
+  matrixG[row][matrixG[row].length-2] = 0;
+  matrixG[row][matrixG[row].length-1] = 0;
 }
 
 // normalize
@@ -165,6 +178,7 @@ const normalize = (matrix) => {
     for (let column = 0; column < matrix[row].length; column++) {
       //matrix[row][column] = (matrix[row][column] + maxSum) * (255 / (2 * maxSum));
       matrix[row][column] = (matrix[row][column] - minSum) / (maxSum - minSum) * 255;
+      //if (row > 10) logLimited(row, column, matrix[row][column]);
     }
   }
 };
@@ -186,40 +200,46 @@ normalize(matrixG);
 for (let row = 0; row < matrixG.length; row++) {
   for (let column = 0; column < matrixG[row].length; column++) {
 
-  const lightning = matrixG[row][column] / 255;
-  const rgb = hsl2rgb(matrixGradient[row][column], 0.5, lightning);
+  const lightning = matrixG[row][column] / 255 / 2;
+  const rgb = hsl2rgb(matrixGradient[row][column], 1, lightning);
 
   const index = row * (WIDTH * 4) + (column * 4);
+  if (0.299 * rgb[0]*255 + 0.587 * rgb[1]*255 + 0.114 * rgb[2]*255 > 100)
+  logLimited(`%c ${row} ${column} rgb(${rgb[0]*255}, ${rgb[1]*255}, ${rgb[2]*255})`, `color:rgb(${rgb[0]*255},${rgb[1]*255},${rgb[2]*255})`);
   data[index] = rgb[0] * 255;
   data[index+1] = rgb[1] * 255;
   data[index+2] = rgb[2] * 255;
+  data[index+3] = 255;
   }
 }
 
 ctx.putImageData(imageData, 0, 0);
 
 canvas.addEventListener("mousemove", (event) => {
-  if (event.clientX < 0 || event.clientX >= WIDTH || event.clientY < 0 || event.clientY >= HEIGHT) return;
-  const row = event.clientX;
-  const column = event.clientY;
+  const column = event.clientX;
+  const row = event.clientY;
+  if (row < 0 || row >= WIDTH || column < 0 || column >= HEIGHT) return;
+  if (matrixG[row, column] < 100) return;
 
   const hover = document.getElementById("hover");
   hover.innerHTML = ""; 
   hover.innerHTML += "gradient: " + matrixGradient[row][column] + "<br />";
-  const lightning = matrixG[row][column] / 255;
-  const rgb = hsl2rgb(matrixGradient[row][column], 0.5, lightning);
+  hover.innerHTML += "g: " + matrixG[row][column] + "<br />";
+  hover.innerHTML += `y: ${row}; x: ${column}<br />`;
+  const lightning = matrixG[row][column] / 255 / 2;
+  const rgb = hsl2rgb(matrixGradient[row][column], 1, lightning);
   rgb[0] *= 255; rgb[1] *= 255; rgb[2] *= 255;
   hover.innerHTML += "color:  " + `<span style="color: rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})">(${rgb[0]}, ${rgb[1]}, ${rgb[2]})</span>` + "<br />";
 
-  hover.style.top = column + 'px';
-  hover.style.left = row + 'px';
+  hover.style.top = (event.clientY+50) + 'px';
+  hover.style.left = (event.clientX) + 'px';
 });
 
 // input: h as an angle in [0,360] and s,l in [0,1] - output: r,g,b in [0,1]
 function hsl2rgb(h,s,l)  {
-   let a=s*Math.min(l,1-l);
-   let f= (n,k=(n+h/30)%12) => l - a*Math.max(Math.min(k-3,9-k,1),-1);
-   return [f(0),f(8),f(4)];
+  let a=s*Math.min(l,1-l);
+  let f= (n,k=(n+h/30)%12) => l - a*Math.max(Math.min(k-3,9-k,1),-1);
+  return [f(0),f(8),f(4)];
 }
 
 var logIndex = 0;
