@@ -219,14 +219,18 @@ for (let row = 0; row < matrixG.length; row++) {
 for (let row = 0; row < matrixG.length; row++) {
   for (let column = matrixG[row].length / 2; column < matrixG[row].length; column++) {
     if (matrixG[row][column] > 100) {
-      logLimited(`${matrixGy[row][column]}\t${matrixGx[row][column]}`);
+      const div = matrixGy[row][column] / matrixGx[row][column];
+      const atan = Math.atan(div);
+      logLimited(`${matrixGy[row][column]}\t${matrixGx[row][column]}\t${matrixG[row][column]}\t${matrixGradient[row][column]}\t${div}\t${atan}`);
     }
   }
 }
 for (let row = matrixG.length - 1; row >= 0; row--) {
   for (let column = matrixG[row].length / 2; column >= 0; column--) {
     if (matrixG[row][column] > 100) {
-      logLimited(`${matrixGy[row][column]}\t${matrixGx[row][column]}`);
+      const div = matrixGy[row][column] / matrixGx[row][column];
+      const atan = Math.atan(div);
+      logLimited(`${matrixGy[row][column]}\t${matrixGx[row][column]}\t${matrixG[row][column]}\t${matrixGradient[row][column]}\t${div}\t${atan}`);
     }
   }
 }
