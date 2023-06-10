@@ -1,4 +1,4 @@
-//var canvas = document.getElementById("canvas");
+var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
 
 
@@ -134,8 +134,16 @@ let matrixGradient = matrix.map(a=>[...a]);
 for (let row = 0; row < matrixGy.length; row++) {
   for (let column = 0; column < matrixGy[row].length; column++) {
     matrixG[row][column] = Math.sqrt(matrixGx[row][column] * matrixGx[row][column] + matrixGy[row][column+1] * matrixGy[row][column]);
-    logLimited(matrixGx[row][column], matrixGy[row][column] / matrixGx[row][column]);
-    matrixGradient[row][column] = Math.atan(matrixGy[row][column] / matrixGx[row][column]) * 720 / Math.PI;
+    
+    let Gx = matrixGx[row][column];
+    if (Gx === 0) Gx = 0.0001;
+    let atan = Math.atan(matrixGy[row][column] / Gx) + Math.PI/2;
+    if (atan < 0) atan = 0;
+    if (atan > Math.PI / 2) atan = Math.PI / 2;
+    
+    matrixGradient[row][column] = (atan) * 720 / Math.PI;
+    if (matrixGradient[row][column] < 350)
+    logLimited(atan, matrixGradient[row][column]);
   }
 }
 
@@ -190,6 +198,23 @@ for (let row = 0; row < matrixG.length; row++) {
 
 ctx.putImageData(imageData, 0, 0);
 
+canvas.addEventListener("mousemove", (event) => {
+  if (event.clientX < 0 || event.clientX >= WIDTH || event.clientY < 0 || event.clientY >= HEIGHT) return;
+  const row = event.clientX;
+  const column = event.clientY;
+
+  const hover = document.getElementById("hover");
+  hover.innerHTML = ""; 
+  hover.innerHTML += "gradient: " + matrixGradient[row][column] + "<br />";
+  const lightning = matrixG[row][column] / 255;
+  const rgb = hsl2rgb(matrixGradient[row][column], 0.5, lightning);
+  rgb[0] *= 255; rgb[1] *= 255; rgb[2] *= 255;
+  hover.innerHTML += "color:  " + `<span style="color: rgb(${rgb[0]}, ${rgb[1]}, ${rgb[2]})">(${rgb[0]}, ${rgb[1]}, ${rgb[2]})</span>` + "<br />";
+
+  hover.style.top = column + 'px';
+  hover.style.left = row + 'px';
+});
+
 // input: h as an angle in [0,360] and s,l in [0,1] - output: r,g,b in [0,1]
 function hsl2rgb(h,s,l)  {
    let a=s*Math.min(l,1-l);
@@ -203,7 +228,7 @@ function logLimited(...rest) {
     logIndex = 1;
   }
 
-  if (logIndex < 1000) {
+  if (logIndex < 5000) {
     console.log(...rest);
     logIndex++;
   }
