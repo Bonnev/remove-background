@@ -204,14 +204,33 @@ for (let row = 0; row < matrixG.length; row++) {
   const rgb = hsl2rgb(matrixGradient[row][column], 1, lightning);
 
   const index = row * (WIDTH * 4) + (column * 4);
-  if (0.299 * rgb[0]*255 + 0.587 * rgb[1]*255 + 0.114 * rgb[2]*255 > 100)
-  logLimited(`%c ${row} ${column} rgb(${rgb[0]*255}, ${rgb[1]*255}, ${rgb[2]*255})`, `color:rgb(${rgb[0]*255},${rgb[1]*255},${rgb[2]*255})`);
+  //if (0.299 * rgb[0]*255 + 0.587 * rgb[1]*255 + 0.114 * rgb[2]*255 > 100)
+
+  //logLimited(`%c ${row} ${column} rgb(${rgb[0]*255}, ${rgb[1]*255}, ${rgb[2]*255})`, `color:rgb(${rgb[0]*255},${rgb[1]*255},${rgb[2]*255})`);
+  //logLimited(`${matrixGy[row][column]}\t${matrixGx[row][column]}`);
   data[index] = rgb[0] * 255;
   data[index+1] = rgb[1] * 255;
   data[index+2] = rgb[2] * 255;
   data[index+3] = 255;
   }
 }
+
+// print around circle
+for (let row = 0; row < matrixG.length; row++) {
+  for (let column = matrixG[row].length / 2; column < matrixG[row].length; column++) {
+    if (matrixG[row][column] > 100) {
+      logLimited(`${matrixGy[row][column]}\t${matrixGx[row][column]}`);
+    }
+  }
+}
+for (let row = matrixG.length - 1; row >= 0; row--) {
+  for (let column = matrixG[row].length / 2; column >= 0; column--) {
+    if (matrixG[row][column] > 100) {
+      logLimited(`${matrixGy[row][column]}\t${matrixGx[row][column]}`);
+    }
+  }
+}
+
 
 ctx.putImageData(imageData, 0, 0);
 
@@ -226,6 +245,10 @@ canvas.addEventListener("mousemove", (event) => {
   hover.innerHTML += "gradient: " + matrixGradient[row][column] + "<br />";
   hover.innerHTML += "g: " + matrixG[row][column] + "<br />";
   hover.innerHTML += `y: ${row}; x: ${column}<br />`;
+  hover.innerHTML += "gx: " + matrixGx[row][column] + "<br />";
+  hover.innerHTML += "gy: " + matrixGy[row][column] + "<br />";
+  hover.innerHTML += "y/x: " + matrixGy[row][column]/matrixGx[row][column] + "<br />";
+  hover.innerHTML += "atan: " +  Math.atan(matrixGy[row][column] / matrixGx[row][column]) + "<br />";
   const lightning = matrixG[row][column] / 255 / 2;
   const rgb = hsl2rgb(matrixGradient[row][column], 1, lightning);
   rgb[0] *= 255; rgb[1] *= 255; rgb[2] *= 255;
@@ -248,7 +271,7 @@ function logLimited(...rest) {
     logIndex = 1;
   }
 
-  if (logIndex < 5000) {
+  if (logIndex < 500000) {
     console.log(...rest);
     logIndex++;
   }
