@@ -137,12 +137,16 @@ for (let row = 0; row < matrixGy.length; row++) {
     
     let Gx = matrixGx[row][column];
     if (Gx === 0) Gx = 0.0001;
-    let atan = Math.atan(matrixGy[row][column] / Gx) + Math.PI/2;
-    if (atan < 0) atan = 0;
-    //if (atan > Math.PI / 2) atan = Math.PI / 2;
-    //logLimited(atan, );
+    let atan = Math.atan(matrixGy[row][column] / Gx)/* + Math.PI/2*/;
+    //if (atan < 0) atan = 0;
     
-    matrixGradient[row][column] = (atan) * 360 / Math.PI;
+    if (Gx < 0) {
+      atan += Math.PI;
+    } else if (atan < 0) {
+      atan += Math.PI * 2;
+    }
+    
+    matrixGradient[row][column] = (atan) * 360 / (Math.PI * 2);
   }
 }
 
@@ -275,8 +279,8 @@ function logLimited(...rest) {
     logIndex = 1;
   }
 
-  if (logIndex < 500000) {
+  //if (logIndex < 500000) {
     console.log(...rest);
     logIndex++;
-  }
+  //}
 }
