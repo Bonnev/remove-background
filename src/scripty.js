@@ -4,10 +4,10 @@ var ctx = canvas.getContext("2d");
 
 var img = document.getElementById("scream");
 
-// const WIDTH = 700;
-// const HEIGHT = 525;
-const WIDTH = 500;
-const HEIGHT = 500;
+const WIDTH = 700;
+const HEIGHT = 525;
+// const WIDTH = 220;
+// const HEIGHT = 277;
 
 
 ctx.drawImage(img, 0, 0, WIDTH, HEIGHT);
@@ -201,7 +201,7 @@ normalize(matrixG);
 // };
 // putInData(matrixG);
 
-for (let row = 0; row < matrixG.length; row++) {
+/*for (let row = 0; row < matrixG.length; row++) {
   for (let column = 0; column < matrixG[row].length; column++) {
 
   const lightning = matrixG[row][column] / 255 / 2;
@@ -217,10 +217,65 @@ for (let row = 0; row < matrixG.length; row++) {
   data[index+2] = rgb[2] * 255;
   data[index+3] = 255;
   }
+}*/
+
+const points = [];
+points.push({x: 0, y: 0});
+const pointsCovered = new Set();
+for (let pointsIndex = 0; pointsIndex < points.length; pointsIndex++) {
+	const currentPoint = points[pointsIndex];
+	
+	// invalid
+	if (currentPoint.x < 0 || currentPoint.x >= WIDTH || currentPoint.y < 0 || currentPoint.y >= HEIGHT) {
+		continue;
+	}
+	
+	if (pointsCovered.has(`${currentPoint.x}:${currentPoint.y}`)) {
+		continue;
+	}
+
+	if (matrixG[currentPoint.y][currentPoint.x] >= 10) {
+		const slopeM = Math.tan(matrixGradient[currentPoint.y][currentPoint.x]);
+		const yIntercept = currentPoint.y - slopeM * currentPoint.x;
+
+		const start = -5;
+		const end = 10;
+		const dist = end - start;
+		for (let ind = start; ind < end; ind++) {
+			let newX = 0;
+			if (matrixGx[currentPoint.y][currentPoint.x] > 0) {
+				newX = currentPoint.x - parseInt(ind / Math.sqrt(1 + slopeM * slopeM));
+			} else {
+				newX = currentPoint.x + parseInt(ind / Math.sqrt(1 + slopeM * slopeM));
+			}
+			// let newX = parseInt(currentPoint.x + ind);
+			let newY = parseInt(slopeM * newX + yIntercept);
+			
+			let index = newY * (WIDTH * 4) + (newX * 4);
+			data[index] = 255;
+			data[index+1] = 255;
+			data[index+2] = 255;
+			data[index+3] = (ind - start) / dist * 255;
+		}
+		
+		continue;
+	}
+
+	// add points at all directions
+	points.push({x: currentPoint.x, y: currentPoint.y - 1});
+	points.push({x: currentPoint.x + 1, y: currentPoint.y});
+	points.push({x: currentPoint.x, y: currentPoint.y + 1});
+	points.push({x: currentPoint.x - 1, y: currentPoint.y});
+
+	// mark current point as covered
+	pointsCovered.add(`${currentPoint.x}:${currentPoint.y}`);
+
+	const index = currentPoint.y * (WIDTH * 4) + (currentPoint.x * 4);
+	data[index+3] = 0;
 }
 
 // print around circle
-for (let row = 0; row < matrixG.length; row++) {
+/*for (let row = 0; row < matrixG.length; row++) {
   for (let column = matrixG[row].length / 2; column < matrixG[row].length; column++) {
     if (matrixG[row][column] > 100) {
       const div = matrixGy[row][column] / matrixGx[row][column];
@@ -237,12 +292,12 @@ for (let row = matrixG.length - 1; row >= 0; row--) {
       logLimited(`${matrixGy[row][column]}\t${matrixGx[row][column]}\t${matrixG[row][column]}\t${matrixGradient[row][column]}\t${div}\t${atan}`);
     }
   }
-}
+}*/
 
 
 ctx.putImageData(imageData, 0, 0);
 
-canvas.addEventListener("mousemove", (event) => {
+/*canvas.addEventListener("mousemove", (event) => {
   const column = event.clientX;
   const row = event.clientY;
   if (row < 0 || row >= WIDTH || column < 0 || column >= HEIGHT) return;
@@ -264,7 +319,7 @@ canvas.addEventListener("mousemove", (event) => {
 
   hover.style.top = (event.clientY+50) + 'px';
   hover.style.left = (event.clientX) + 'px';
-});
+});*/
 
 // input: h as an angle in [0,360] and s,l in [0,1] - output: r,g,b in [0,1]
 function hsl2rgb(h,s,l)  {
