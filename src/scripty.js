@@ -6,8 +6,8 @@ var img = document.getElementById("scream");
 
 const WIDTH = 700;
 const HEIGHT = 525;
-// const WIDTH = 220;
-// const HEIGHT = 277;
+// const WIDTH = 792;
+// const HEIGHT = 690;
 
 
 ctx.drawImage(img, 0, 0, WIDTH, HEIGHT);
@@ -219,60 +219,79 @@ normalize(matrixG);
   }
 }*/
 
-const points = [];
-points.push({x: 0, y: 0});
-const pointsCovered = new Set();
-for (let pointsIndex = 0; pointsIndex < points.length; pointsIndex++) {
-	const currentPoint = points[pointsIndex];
-	
-	// invalid
-	if (currentPoint.x < 0 || currentPoint.x >= WIDTH || currentPoint.y < 0 || currentPoint.y >= HEIGHT) {
-		continue;
-	}
-	
-	if (pointsCovered.has(`${currentPoint.x}:${currentPoint.y}`)) {
-		continue;
-	}
-
-	if (matrixG[currentPoint.y][currentPoint.x] >= 10) {
-		const slopeM = Math.tan(matrixGradient[currentPoint.y][currentPoint.x]);
-		const yIntercept = currentPoint.y - slopeM * currentPoint.x;
-
-		const start = -5;
-		const end = 10;
-		const dist = end - start;
-		for (let ind = start; ind < end; ind++) {
-			let newX = 0;
-			if (matrixGx[currentPoint.y][currentPoint.x] > 0) {
-				newX = currentPoint.x - parseInt(ind / Math.sqrt(1 + slopeM * slopeM));
-			} else {
-				newX = currentPoint.x + parseInt(ind / Math.sqrt(1 + slopeM * slopeM));
-			}
-			// let newX = parseInt(currentPoint.x + ind);
-			let newY = parseInt(slopeM * newX + yIntercept);
-			
-			let index = newY * (WIDTH * 4) + (newX * 4);
-			data[index] = 255;
-			data[index+1] = 255;
-			data[index+2] = 255;
-			data[index+3] = (ind - start) / dist * 255;
+canvas.addEventListener("click", (event) => {
+	const points = [];
+	points.push({x: event.clientX, y: event.clientY});
+	const pointsCovered = new Set();
+	for (let pointsIndex = 0; pointsIndex < points.length; pointsIndex++) {
+		const currentPoint = points[pointsIndex];
+		
+		// invalid
+		if (currentPoint.x < 0 || currentPoint.x >= WIDTH || currentPoint.y < 0 || currentPoint.y >= HEIGHT) {
+			continue;
 		}
 		
-		continue;
+		if (pointsCovered.has(`${currentPoint.x}:${currentPoint.y}`)) {
+			continue;
+		}
+
+		if (matrixG[currentPoint.y][currentPoint.x] >= 60) {
+			let index = currentPoint.y * (WIDTH * 4) + (currentPoint.x * 4);
+			// data[index] = 255;
+			// data[index+1] = 255;
+			// data[index+2] = 255;
+			data[index+3] = 0;
+			
+			/*const slopeM = Math.tan(matrixGradient[currentPoint.y][currentPoint.x]);
+			const yIntercept = currentPoint.y - slopeM * currentPoint.x;
+
+			const start = -4;
+			const end = 4;
+			const dist = end - start;
+			for (let ind = start; ind < end; ind++) {
+				let newX = 0;
+				//if (matrixGx[currentPoint.y][currentPoint.x] > 0) {
+				if (matrixGradient[currentPoint.y][currentPoint.x] > 90) {
+					newX = currentPoint.x - parseInt(ind / Math.sqrt(1 + slopeM * slopeM));
+				} else {
+					newX = currentPoint.x + parseInt(ind / Math.sqrt(1 + slopeM * slopeM));
+				}
+				// let newX = parseInt(currentPoint.x + ind);
+				let newY = parseInt(slopeM * newX + yIntercept);
+				
+				let index = newY * (WIDTH * 4) + (newX * 4);
+				data[index] = 255;
+				data[index+1] = 255;
+				data[index+2] = 255;
+				//data[index+3] = (ind - start) / dist * 255;
+				data[index+3] = 255;
+			}*/
+
+			for (let y = currentPoint.y - 2; y <= currentPoint.y + 2; y++) {
+				for (let x = currentPoint.x - 2; x <= currentPoint.x + 2; x++) {
+					let index = y * (WIDTH * 4) + (x * 4);
+					data[index+3] = 0;
+				}
+			}
+			
+			continue;
+		}
+
+		// add points at all directions
+		points.push({x: currentPoint.x, y: currentPoint.y - 1});
+		points.push({x: currentPoint.x + 1, y: currentPoint.y});
+		points.push({x: currentPoint.x, y: currentPoint.y + 1});
+		points.push({x: currentPoint.x - 1, y: currentPoint.y});
+
+		// mark current point as covered
+		pointsCovered.add(`${currentPoint.x}:${currentPoint.y}`);
+
+		const index = currentPoint.y * (WIDTH * 4) + (currentPoint.x * 4);
+		data[index+3] = 0;
 	}
 
-	// add points at all directions
-	points.push({x: currentPoint.x, y: currentPoint.y - 1});
-	points.push({x: currentPoint.x + 1, y: currentPoint.y});
-	points.push({x: currentPoint.x, y: currentPoint.y + 1});
-	points.push({x: currentPoint.x - 1, y: currentPoint.y});
-
-	// mark current point as covered
-	pointsCovered.add(`${currentPoint.x}:${currentPoint.y}`);
-
-	const index = currentPoint.y * (WIDTH * 4) + (currentPoint.x * 4);
-	data[index+3] = 0;
-}
+	ctx.putImageData(imageData, 0, 0);
+});
 
 // print around circle
 /*for (let row = 0; row < matrixG.length; row++) {
@@ -300,7 +319,7 @@ ctx.putImageData(imageData, 0, 0);
 /*canvas.addEventListener("mousemove", (event) => {
   const column = event.clientX;
   const row = event.clientY;
-  if (row < 0 || row >= WIDTH || column < 0 || column >= HEIGHT) return;
+  if (column < 0 || column >= WIDTH || row < 0 || row >= HEIGHT) return;
   if (matrixG[row, column] < 100) return;
 
   const hover = document.getElementById("hover");
