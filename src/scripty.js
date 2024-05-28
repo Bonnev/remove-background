@@ -1,3 +1,10 @@
+// https://websitesetup.org/wp-content/uploads/2015/11/Infopgraphic-CanvasCheatSheet-Final2.pdf
+// https://www.had2know.org/technology/rgb-to-gray-scale-converter.html
+// https://en.wikipedia.org/wiki/Sobel_operator
+// https://www.w3schools.com/colors/colors_hsl.asp
+// https://www.wikihow.com/Convert-Radians-to-Degrees
+// https://stackoverflow.com/questions/2353211/hsl-to-rgb-color-conversion
+
 var canvas = document.getElementById("canvas");
 var ctx = canvas.getContext("2d");
 
@@ -242,6 +249,8 @@ canvas.addEventListener("click", (event) => {
 			// data[index+2] = 255;
 			data[index+3] = 0;
 			
+			// https://stackoverflow.com/questions/1571294/line-equation-with-angle
+			// https://math.stackexchange.com/questions/4162643/how-to-move-a-point-along-a-line
 			/*const slopeM = Math.tan(matrixGradient[currentPoint.y][currentPoint.x]);
 			const yIntercept = currentPoint.y - slopeM * currentPoint.x;
 
@@ -288,6 +297,13 @@ canvas.addEventListener("click", (event) => {
 
 		const index = currentPoint.y * (WIDTH * 4) + (currentPoint.x * 4);
 		data[index+3] = 0;
+
+		// data[index] = 255;
+		// data[index+1] = 0;
+		// data[index+2] = 0;
+		// data[index+3] = 255;
+		// ctx.putImageData(imageData, 0, 0);
+		// debugger;
 	}
 
 	ctx.putImageData(imageData, 0, 0);
